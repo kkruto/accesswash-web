@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import AuthMiddleware from './auth-middleware'
 
 export const metadata: Metadata = {
   title: "AccessWash Customer Portal",
@@ -14,7 +15,9 @@ export default function TenantLayout({
 }) {
   return (
     <div className="min-h-screen bg-gray-50">
-      {children}
+      <AuthMiddleware tenant={params.tenant}>
+        {children}
+      </AuthMiddleware>
     </div>
   )
 }

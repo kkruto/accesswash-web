@@ -38,7 +38,8 @@ export function useCustomerAuth() {
     loadTenantInfo,
     updateProfile,
     clearError,
-    checkAuthStatus
+    checkAuthStatus,
+    verifyConnection // Added for connection verification
   } = useAuthStore()
 
   // Load customer from storage and tenant info on mount
@@ -67,6 +68,7 @@ export function useCustomerAuth() {
     updateProfile: (data: any) => updateProfile(data, tenant),
     loadCustomerFromStorage: () => loadCustomerFromStorage(tenant),
     checkAuthStatus: () => checkAuthStatus(tenant),
+    verifyConnection: (data: any) => verifyConnection(data, tenant), // Added connection verification
     clearError,
   }
 }
@@ -83,4 +85,96 @@ export function useTenantInfo() {
   }, [tenantSlug, tenantInfo, loadTenantInfo])
 
   return tenantInfo
+}
+
+// Hook for service requests management
+export function useServiceRequests() {
+  const { tenant, api } = useTenant()
+  const { customer, isAuthenticated } = useCustomerAuth()
+
+  const getServiceRequests = async () => {
+    if (!isAuthenticated) throw new Error('Not authenticated')
+    return await api.getServiceRequests()
+  }
+
+  const getServiceRequest = async (id: string) => {
+    if (!isAuthenticated) throw new Error('Not authenticated')
+    return await api.getServiceRequest(id)
+  }
+
+  const createServiceRequest = async (data: {
+    issue_type: string
+    title: string
+    description: string
+    urgency: string
+    reported_location: string
+    location_coordinates?: { lat: number; lng: number }
+  }) => {
+    if (!isAuthenticated) throw new Error('Not authenticated')
+    return await api.createServiceRequest(data)
+  }
+
+  const addComment = async (requestId: string, comment: string) => {
+    if (!isAuthenticated) throw new Error('Not authenticated')
+    return await api.addComment(requestId, comment)
+  }
+
+  const rateServiceRequest = async (requestId: string, rating: number, feedback?: string) => {
+    if (!isAuthenticated) throw new Error('Not authenticated')
+    return await api.rateServiceRequest(requestId, rating, feedback)
+  }
+
+  const uploadPhoto = async (requestId: string, photo: File, caption?: string) => {
+    if (!isAuthenticated) throw new Error('Not authenticated')
+    return await api.uploadPhoto(requestId, photo, caption)
+  }
+
+  return {
+    getServiceRequests,
+    getServiceRequest,
+    createServiceRequest,
+    addComment,
+    rateServiceRequest,
+    uploadPhoto,
+    customer,
+    isAuthenticated
+  }
+}
+
+// Hook for dashboard data
+export function useDashboard() {
+  const { api } = useTenant()
+  const { isAuthenticated } = useCustomerAuth()
+
+  const getDashboard = async () => {
+    if (!isAuthenticated) throw new Error('Not authenticated')
+    return await api.getDashboard()
+  }
+
+  return {
+    getDashboard,
+    isAuthenticated
+  }
+}
+
+// Hook for session management
+export function useSessions() {
+  const { api } = useTenant()
+  const { isAuthenticated } = useCustomerAuth()
+
+  const getSessions = async () => {
+    if (!isAuthenticated) throw new Error('Not authenticated')
+    return await api.getSessions()
+  }
+
+  const logoutSession = async (sessionId: string) => {
+    if (!isAuthenticated) throw new Error('Not authenticated')
+    return await api.logoutSession(sessionId)
+  }
+
+  return {
+    getSessions,
+    logoutSession,
+    isAuthenticated
+  }
 }

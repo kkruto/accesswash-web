@@ -22,6 +22,8 @@ interface AuthState {
   updateProfile: (data: Partial<Customer>, tenant: string) => Promise<void>
   clearError: () => void
   checkAuthStatus: (tenant: string) => boolean
+  // New method for connection verification
+  verifyConnection: (data: any, tenant: string) => Promise<any>
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -51,6 +53,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error(response.message || 'Login failed')
       }
     } catch (error: any) {
+      console.error('Login error:', error)
       set({ 
         error: error.message || 'Login failed', 
         loading: false,
@@ -80,12 +83,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error(response.message || 'Registration failed')
       }
     } catch (error: any) {
+      console.error('Registration error:', error)
       const errorMessage = error.message || 'Registration failed'
       set({ 
         error: errorMessage, 
         loading: false,
         isAuthenticated: false,
         customer: null 
+      })
+      throw error
+    }
+  },
+
+  // Connection verification for registration
+  verifyConnection: async (data: any, tenant: string) => {
+    set({ loading: true, error: null })
+    
+    try {
+      const api = createApiClient(tenant)
+      const response = await api.verifyConnection(data)
+      set({ loading: false })
+      return response.data
+    } catch (error: any) {
+      console.error('Connection verification error:', error)
+      set({ 
+        error: error.message || 'Connection verification failed', 
+        loading: false 
       })
       throw error
     }
@@ -119,6 +142,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await api.forgotPassword(email)
       set({ loading: false })
     } catch (error: any) {
+      console.error('Forgot password error:', error)
       const errorMessage = error.message || 'Failed to send reset instructions'
       set({ error: errorMessage, loading: false })
       throw error
@@ -138,6 +162,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       })
       set({ loading: false })
     } catch (error: any) {
+      console.error('Reset password error:', error)
       const errorMessage = error.message || 'Password reset failed'
       set({ error: errorMessage, loading: false })
       throw error
@@ -157,6 +182,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       })
       set({ loading: false })
     } catch (error: any) {
+      console.error('Change password error:', error)
       const errorMessage = error.message || 'Password change failed'
       set({ error: errorMessage, loading: false })
       throw error
@@ -198,6 +224,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: null
       })
     } catch (error) {
+      console.warn('Failed to load customer from storage:', error)
       set({ 
         customer: null, 
         isAuthenticated: false,
@@ -225,6 +252,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error(response.message || 'Profile update failed')
       }
     } catch (error: any) {
+      console.error('Update profile error:', error)
       const errorMessage = error.message || 'Profile update failed'
       set({ error: errorMessage, loading: false })
       throw error
@@ -256,6 +284,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return false
       }
     } catch (error) {
+      console.warn('Auth status check error:', error)
       set({ 
         customer: null, 
         isAuthenticated: false,

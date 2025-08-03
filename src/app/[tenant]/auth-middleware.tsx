@@ -32,7 +32,7 @@ export default function AuthMiddleware({
         router.push(`/${tenant}`)
       }
     }
-  }, [tenant, loading, isAuthenticated, isAuthPage, router, checkAuthStatus])
+  }, [tenant, loading, isAuthenticated, isAuthPage, router, checkAuthStatus, pathname])
 
   // Show loading spinner while checking auth
   if (loading && !isAuthPage) {
